@@ -8,6 +8,11 @@ const getCurrentTime = () => new Date();
 const clear = () => console.clear();
 const log = (msg) => console.log(msg);
 
+const compose =
+  (...fns) =>
+  (arg) =>
+    fns.reduce((composed, f) => f(composed), arg);
+
 const abstractClockTime = (date) => ({
   hours: date.getHours(),
   minutes: date.getMinutes(),
@@ -31,11 +36,35 @@ const formatClock = (format) => (time) =>
     .replace('hh', time.hours)
     .replace('mm', time.minutes)
     .replace('ss', time.seconds)
-    .reaplce('tt', time.ampm);
+    .replace('tt', time.ampm);
 
 const prependZero = (key) => (clockTime) => ({
   ...clockTime,
   [key]: clockTime[key] < 10 ? '0' + clockTime[key] : clockTime[key],
 });
 
-const convertToCivilianTime = (clockTime) => compose();
+const convertToCivilianTime = (clockTime) =>
+  compose(appendAMPM, civilianHours)(clockTime);
+
+const doubleDigits = (civilianTime) =>
+  compose(
+    prependZero('hours'),
+    prependZero('minutes'),
+    prependZero('seconds')
+  )(civilianTime);
+
+const startTicking = () =>
+  setInterval(
+    compose(
+      clear,
+      getCurrentTime,
+      abstractClockTime,
+      convertToCivilianTime,
+      doubleDigits,
+      formatClock('hh:mm:ss tt'),
+      display(log)
+    ),
+    oneSecond()
+  );
+
+startTicking();
